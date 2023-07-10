@@ -5,14 +5,14 @@ from datetime import datetime
 import argparse
 
 parser = argparse.ArgumentParser(description='Smush your codebase json mapfiles into one')
-parser.add_argument('codebase', metavar='N', type=str, nargs=1,
+parser.add_argument('--codebase', metavar='N', type=str, nargs='?',
                     help='Path to your ss13 code repository')
-parser.add_argument('out_dir', metavar='N', type=str, nargs=1,
+parser.add_argument('--out_dir', metavar='N', type=str, nargs='?',
                     help='Path to output for the merged json')
 args = parser.parse_args()
 
-codebase = args.codebase[0]
-out_dir = args.out_dir[0]
+codebase = args.codebase
+out_dir = args.out_dir
 maps_dir = f"{codebase}/_maps"
 
 maps = []

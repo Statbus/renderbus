@@ -22,7 +22,7 @@ docker run -it --rm \
     -v tgstation/:/tg \
     -v $(pwd):/work:Z \
     -w /work \
-    python:3 /work/getmaps.py /tg /output
+    python:3 /work/getmaps.py --codebase /tg --out_dir /output
 ```
 
 This is gonna spit out a list of maps to feed to the renderer in step 3.
@@ -42,12 +42,13 @@ docker run --rm \
     minimap /tg/_maps/map_files \
     -o /output
 ```
-By itself, this command should spit out the help text. Copy the output from step 2 and paste it at the end of the command above, so you wind up with something like this: 
+Go ahead and run the command above (after you change it to reflect your local filesystem). By itself, this command should spit out the help text. Copy the output from step 2 and paste it at the end of the command above, so you wind up with something like this: 
 
 ```
-docker run -v tgstation-1:/tg -v $(pwd)/output:/output spacemandmm --env /tg/tgstation.dme minimap -o /output  /tg/_maps/map_files/Birdshot/birdshot.dmm /tg/_maps/map_files/Deltastation/DeltaStation2.dmm /tg/_maps/map_files/IceBoxStation/IceBoxStation.dmm /tg/_maps/map_files/MetaStation/MetaStation.dmm /tg/_maps/map_files/debug/multiz.dmm /tg/_maps/map_files/NorthStar/north_star.dmm /tg/_maps/map_files/debug/runtimestation.dmm /tg/_maps/map_files/tramstation/tramstation.dmm
+docker run -v tgstation/:/tg -v $(pwd)/output:/output spacemandmm --env /tg/tgstation.dme minimap -o /output  /tg/_maps/map_files/Birdshot/birdshot.dmm /tg/_maps/map_files/Deltastation/DeltaStation2.dmm /tg/_maps/map_files/IceBoxStation/IceBoxStation.dmm /tg/_maps/map_files/MetaStation/MetaStation.dmm /tg/_maps/map_files/debug/multiz.dmm /tg/_maps/map_files/NorthStar/north_star.dmm /tg/_maps/map_files/debug/runtimestation.dmm /tg/_maps/map_files/tramstation/tramstation.dmm
 ```
-(this will take a while)
+
+There's probably a better way to do this, but for now the quick n' dirty way is fine. Once you have your map list appended properly, run the command and render your maps.
 
 ## 4. Crush them as though they were your enemies
 The resulting PNG files created by SpacemanDMM (~16mb) are huge. So we'll run 'em through pngcrush:
