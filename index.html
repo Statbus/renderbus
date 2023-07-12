@@ -38,14 +38,14 @@
         const map = L.map('map', {
             "center": [-128, 128],
             "zoom": 4,
-            "crs": L.CRS.Simple
+            "crs": L.CRS.Simple,
         }).setView([128,-128], 1);
 
         const options = {
             maxNativeZoom: 5,
             maxZoom: 7,
             crs: L.CRS.Simple,
-            attribution: ''
+            attribution: false
         };
 
         map.fitBounds(bounds);
@@ -53,7 +53,6 @@
 
         var layers = {}
         const response = fetch('maps.json').then(response => response.json()).then(response => {
-            console.log(response)
             for (const [key, m] of Object.entries(response)) {
                 var stationMap = m.map_file.replace('.dmm', '')
                 if (m.hasOwnProperty('traits')) {
@@ -69,6 +68,9 @@
             }
             console.log(layers)
             const layerControl = L.control.layers(layers).addTo(map);
+        })
+        const revisionResponse = fetch('revision.json').then(response => response.json()).then(response => {
+            const attribution = new L.control.attribution().addAttribution(`Renders from commit <a href="https://github.com/tgstation/tgstation/commit/${response.hash}" target="_blank">${response.shorthash}</a> on ${response.date}`).addTo(map)
         })
 
     </script>
