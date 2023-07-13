@@ -38,39 +38,83 @@
         const map = L.map('map', {
             "center": [-128, 128],
             "zoom": 4,
+            "minZoom": 1,
             "crs": L.CRS.Simple,
-        }).setView([128,-128], 1);
+            // "attributionControl": false
+        }).setView([128, -128], 1);
+
+        map.fitBounds(bounds);
+        map.setMaxBounds(bounds);
+
+        const layerControl = L.control.layers().addTo(map)
+
+        const revisionResponse = fetch('revision.json').then(response => response.json()).then(response => {
+            map.attributionControl.addAttribution(`Rendered from commit <a href="https://github.com/tgstation/tgstation/commit/${response.hash}" target="_blank">${response.shorthash}</a> on ${response.date}`).addTo(map)
+        })
 
         const options = {
             maxNativeZoom: 5,
             maxZoom: 7,
             crs: L.CRS.Simple,
-            attribution: false
         };
 
-        map.fitBounds(bounds);
-        map.setMaxBounds(bounds);
-
         var layers = {}
+        var layerGroups = {}
         const response = fetch('maps.json').then(response => response.json()).then(response => {
             for (const [key, m] of Object.entries(response)) {
-                var stationMap = m.map_file.replace('.dmm', '')
+                const stationMap = m.map_file.replace('.dmm', '')
+                const name = m.map_name
+                var station = {}
+                //Multiz station detected!
                 if (m.hasOwnProperty('traits')) {
-                    for (const [i, e] of Object.entries(m.traits)) {
-                        var zLevel = parseInt(i);
-                        var layer = { [`${m.map_name} - ${zLevel + 1}`]: new L.tileLayer(`/tiles/${stationMap}-${zLevel + 1}/{z}/tile_{x}-{y}.png`, options) }
-                        layers = Object.assign(layers, layer)
-                    };
+                    var station = new L.layerGroup()
+                    var entries = Object.entries(m.traits)
+                    if ('tramstation' === stationMap) {
+                        entries.reverse()
+                    }
+                    for (const [i, e] of entries) {
+                        const zLevel = parseInt(i);
+                        layerControl.addBaseLayer(L.tileLayer(`/tiles/${stationMap}-${zLevel + 1}/{z}/tile_{x}-{y}.png`, {...options, 'name':`${m.map_name} - Level ${zLevel + 1}`}), (`${m.map_name} - Level ${zLevel + 1}`))
+                    }
                 } else {
-                    var layer = { [m.map_name]: new L.tileLayer(`/tiles/${stationMap}-1/{z}/tile_{x}-{y}.png`, options) }
-                    layers = Object.assign(layers, layer)
+                    layerControl.addBaseLayer(L.tileLayer(`/tiles/${stationMap}-1/{z}/tile_{x}-{y}.png`, {...options, 'name': m.map_name}),m.map_name)
                 }
             }
-            console.log(layers)
-            const layerControl = L.control.layers(layers).addTo(map);
         })
-        const revisionResponse = fetch('revision.json').then(response => response.json()).then(response => {
-            const attribution = new L.control.attribution().addAttribution(`Renders from commit <a href="https://github.com/tgstation/tgstation/commit/${response.hash}" target="_blank">${response.shorthash}</a> on ${response.date}`).addTo(map)
+
+        function tgcoords(lat, lng, bounds) {
+            var coords = {};
+            coords.y = lat + Math.abs(bounds[1][0]) + 1;
+            coords.x = lng + 1;
+            return coords
+        }
+
+        function leafletcoords(coords, bounds) {
+            var latlng = {};
+            latlng.lat = coords.y - Math.abs(bounds[1][0]) || 255;
+            latlng.lng = coords.x - 1;
+            return latlng
+        }
+        var polygon = new L.polygon([], {
+            "fill": false,
+            "color": '#a4bad6',
+            "weight": 5
+        })
+        map.on('mousemove', (e) => {
+            var lat = Math.floor(e.latlng.lat);
+            var lng = Math.floor(e.latlng.lng);
+            var coords = tgcoords(lat, lng, bounds);
+            polygon.setLatLngs([
+                [lat, lng],
+                [lat + 1, lng],
+                [lat + 1, lng + 1],
+                [lat, lng + 1],
+                [lat, lng]
+            ]).redraw().bindTooltip(`${coords.x}, ${coords.y}`).openTooltip().addTo(map);
+        }); 
+
+        map.on('baselayerchange',(layer) => {
+            console.log(layer)
         })
 
     </script>
